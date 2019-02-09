@@ -111,7 +111,9 @@ namespace Libplanet
                 {
                     string msg = $"the block #{i}'s timestamp " +
                         $"({block.Timestamp.ToString(fmtString)}) is " +
-                        $"later than now ({now.ToString(fmtString)})";
+                        $"later than now ({now.ToString(fmtString)})" +
+                        $"block{block.Index}: {block.Timestamp.Ticks}" +
+                        $"now: {now.Ticks}";
 
                     var bl = blocks.ToArray();
 
@@ -131,7 +133,9 @@ namespace Libplanet
                     string msg = $"the block #{i}'s timestamp " +
                         $"({block.Timestamp.ToString(fmtString)}) is " +
                         $"earlier than the block #{i - 1}'s " +
-                        $"({prevTimestamp.Value.ToString(fmtString)})";
+                        $"({prevTimestamp.Value.ToString(fmtString)})" +
+                        $"block{block.Index}: {block.Timestamp.Ticks}" +
+                        $"now: {now.Ticks}";
 
                     var bl = blocks.ToArray();
 
