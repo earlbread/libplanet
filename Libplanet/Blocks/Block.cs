@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
+using System.Threading;
 using Libplanet.Action;
 using Libplanet.Serialization;
 using Libplanet.Tx;
@@ -113,6 +114,9 @@ namespace Libplanet.Blocks
                 timestamp,
                 transactions
             );
+
+            Thread.Sleep(10);
+
             Nonce nonce = Hashcash.Answer(
                 n => MakeBlock(n).ToBencodex(false, true),
                 difficulty
