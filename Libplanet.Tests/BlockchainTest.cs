@@ -173,6 +173,7 @@ namespace Libplanet.Tests
         public void CanFindNextHashes()
         {
             DateTime datetime1 = DateTime.UtcNow;
+            Thread.Sleep(10);
             DateTime datetime2 = DateTime.UtcNow;
 
             if (datetime1 == datetime2)
