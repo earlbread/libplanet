@@ -172,6 +172,18 @@ namespace Libplanet.Tests
         [Fact]
         public void CanFindNextHashes()
         {
+            DateTime datetime1 = DateTime.UtcNow;
+            DateTime datetime2 = DateTime.UtcNow;
+
+            if (datetime1 == datetime2)
+            {
+                string fmtString = "MM/dd/yyyy hh:mm:ss.ffffff tt";
+                throw new Exception(
+                    $"({datetime1.ToString(fmtString)}) is " +
+                     $"later than now ({datetime2.ToString(fmtString)})"
+                );
+            }
+
             _blockchain.Append(_fx.Block1);
             var block0 = _fx.Block1;
             var block1 = _blockchain.MineBlock(_fx.Address1);

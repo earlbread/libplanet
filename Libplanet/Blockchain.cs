@@ -105,7 +105,7 @@ namespace Libplanet
                     );
                 }
 
-                string fmtString = "MM/dd/yyyy hh:mm:ss.fff tt";
+                string fmtString = "MM/dd/yyyy hh:mm:ss.ffffff tt";
 
                 if (now < block.Timestamp)
                 {
