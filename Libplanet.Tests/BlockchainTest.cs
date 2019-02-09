@@ -179,8 +179,10 @@ namespace Libplanet.Tests
             {
                 string fmtString = "MM/dd/yyyy hh:mm:ss.ffffff tt";
                 throw new Exception(
-                    $"({datetime1.ToString(fmtString)}) is " +
-                     $"later than now ({datetime2.ToString(fmtString)})"
+                    $"({datetime1.ToString(fmtString)}) is same with " +
+                    $"({datetime2.ToString(fmtString)}) " +
+                    $"tick 1: {datetime1.Ticks}" +
+                    $"tick 2: {datetime2.Ticks}"
                 );
             }
 
