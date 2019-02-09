@@ -105,19 +105,24 @@ namespace Libplanet
                     );
                 }
 
+                string fmtString = "MM/dd/yyyy hh:mm:ss.fff tt";
+
                 if (now < block.Timestamp)
                 {
                     throw new InvalidBlockTimestampException(
-                        $"the block #{i}'s timestamp ({block.Timestamp}) is " +
-                        $"later than now ({now})"
+                        $"the block #{i}'s timestamp " +
+                        $"({block.Timestamp.ToString(fmtString)}) is " +
+                        $"later than now ({now.ToString(fmtString)})"
                     );
                 }
 
                 if (block.Timestamp <= prevTimestamp)
                 {
                     throw new InvalidBlockTimestampException(
-                        $"the block #{i}'s timestamp ({block.Timestamp}) is " +
-                        $"earlier than the block #{i - 1}'s ({prevTimestamp})"
+                        $"the block #{i}'s timestamp " +
+                        $"({block.Timestamp.ToString(fmtString)}) is " +
+                        $"earlier than the block #{i - 1}'s " +
+                        $"({prevTimestamp.Value.ToString(fmtString)})"
                     );
                 }
 
