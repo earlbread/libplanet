@@ -178,7 +178,7 @@ namespace Libplanet.Tests
 
             if (datetime1 == datetime2)
             {
-                string fmtString = "MM/dd/yyyy hh:mm:ss.ffffff tt";
+                string fmtString = "MM/dd/yyyy hh:mm:ss.fffffff tt";
                 throw new Exception(
                     $"({datetime1.ToString(fmtString)}) is same with " +
                     $"({datetime2.ToString(fmtString)}) " +
