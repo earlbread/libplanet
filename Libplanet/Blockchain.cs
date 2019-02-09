@@ -109,10 +109,20 @@ namespace Libplanet
 
                 if (now < block.Timestamp)
                 {
-                    throw new InvalidBlockTimestampException(
-                        $"the block #{i}'s timestamp " +
+                    string msg = $"the block #{i}'s timestamp " +
                         $"({block.Timestamp.ToString(fmtString)}) is " +
-                        $"later than now ({now.ToString(fmtString)})"
+                        $"later than now ({now.ToString(fmtString)})";
+
+                    var bl = blocks.ToArray();
+
+                    for (var ii = 0; ii < bl.Length; ii++)
+                    {
+                        msg += $"\nblock timestamp{bl[ii].Index}: " +
+                        $"{bl[ii].Timestamp} {bl[ii].PreviousHash}";
+                    }
+
+                    throw new InvalidBlockTimestampException(
+                        msg
                     );
                 }
 
