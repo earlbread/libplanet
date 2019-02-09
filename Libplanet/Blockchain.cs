@@ -142,7 +142,8 @@ namespace Libplanet
                     for (var ii = 0; ii < bl.Length; ii++)
                     {
                         msg += $"\nblock timestamp{bl[ii].Index}: " +
-                        $"{bl[ii].Timestamp} {bl[ii].PreviousHash}";
+                        $"{bl[ii].Timestamp} {bl[ii].PreviousHash} " +
+                        $"{bl[ii].Timestamp.Ticks}";
                     }
 
                     throw new InvalidBlockTimestampException(
