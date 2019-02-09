@@ -118,11 +118,20 @@ namespace Libplanet
 
                 if (block.Timestamp <= prevTimestamp)
                 {
-                    throw new InvalidBlockTimestampException(
-                        $"the block #{i}'s timestamp " +
+                    string msg = $"the block #{i}'s timestamp " +
                         $"({block.Timestamp.ToString(fmtString)}) is " +
                         $"earlier than the block #{i - 1}'s " +
-                        $"({prevTimestamp.Value.ToString(fmtString)})"
+                        $"({prevTimestamp.Value.ToString(fmtString)})";
+
+                    var bl = blocks.ToArray();
+
+                    for (var ii = 0; ii < bl.Length; ii++)
+                    {
+                        msg += $"\nblock timestamp{ii}: {bl[ii].Timestamp}";
+                    }
+
+                    throw new InvalidBlockTimestampException(
+                        msg
                     );
                 }
 
