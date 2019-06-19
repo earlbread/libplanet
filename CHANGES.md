@@ -8,6 +8,9 @@ To be released.
 
 ### Backward-incompatible interface changes
 
+ -  `Swarm` constructor became to receive `BlockChain<T>` and have a type
+    parameter `T`.
+
 ### Added interfaces
 
  -  Added `LiteDBStore` backend that uses [LiteDB] under the hood.  [[#269]]
