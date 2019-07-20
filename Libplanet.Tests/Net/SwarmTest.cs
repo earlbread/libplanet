@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -998,6 +1000,41 @@ namespace Libplanet.Tests.Net
                     minerSwarm.StopAsync(),
                     receiverSwarm.StopAsync());
             }
+        }
+
+        [Fact]
+        public void SelectTest()
+        {
+            Socket receiver =
+                new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Unspecified);
+            Socket sender =
+                new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Unspecified);
+
+            receiver.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            receiver.Listen(1);
+            sender.Connect(receiver.LocalEndPoint);
+            receiver = receiver.Accept();
+
+            sender.Send(new byte[] { 1 });
+
+            var readList = new List<Socket> { receiver };
+            var errorList = new List<Socket> { receiver };
+
+#if  NETCOREAPP
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Socket.Select(readList, null, null, -1);
+                Socket.Select(null, null, errorList, -1);
+            }
+            else
+            {
+                Socket.Select(readList, null, errorList, -1);
+            }
+#else
+            Socket.Select(readList, null, errorList, -1);
+#endif
+            Assert.Single(readList);
+            Assert.Empty(errorList);
         }
 
         private async Task<Task> StartAsync(
