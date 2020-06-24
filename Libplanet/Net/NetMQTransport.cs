@@ -267,7 +267,7 @@ namespace Libplanet.Net
                     TimeSpan.FromSeconds(10),
                     TimeSpan.FromSeconds(10),
                     _cancellationToken));
-            tasks.Add(RebuildConnectionAsync(TimeSpan.FromMinutes(30), _cancellationToken));
+            tasks.Add(RebuildConnectionAsync(TimeSpan.FromMinutes(5), _cancellationToken));
             tasks.Add(RunPoller(_routerPoller));
             tasks.Add(RunPoller(_broadcastPoller));
 
@@ -1039,11 +1039,12 @@ namespace Libplanet.Net
                     {
                         _logger.Error($"TerminatingException occurred during poller.Run()");
                     }
-                    catch (ObjectDisposedException)
+                    catch (ObjectDisposedException ode)
                     {
                         _logger.Error(
-                            $"ObjectDisposedException occurred during poller.Run()"
+                            $"ObjectDisposedException occurred during poller.Run(), {ode}"
                         );
+                        throw;
                     }
                 },
                 CancellationToken.None,
