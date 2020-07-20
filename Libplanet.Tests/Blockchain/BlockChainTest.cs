@@ -1443,12 +1443,16 @@ namespace Libplanet.Tests.Blockchain
         [Fact]
         public async void GetStateReturnsValidStateAfterFork()
         {
+            var bytes = ByteUtil.ParseHex(
+                "0dd5112eae25df2ff77779fa940e255f7a493022b841b7ca0296dca7ba3c9e");
+            var privateKey = new PrivateKey(bytes);
+
             var genesisBlock = BlockChain<DumbAction>.MakeGenesisBlock(
                 new[]
                 {
                     new DumbAction(_fx.Address1, "item0.0", idempotent: true),
                 });
-            var privateKey = new PrivateKey();
+
             var store = new DefaultStore(path: null);
 
             var chain =
@@ -1459,6 +1463,7 @@ namespace Libplanet.Tests.Blockchain
                 privateKey,
                 new[] { new DumbAction(_fx.Address1, "item1.0"), }
             );
+
             await chain.MineBlock(_fx.Address1);
             Assert.Equal("item0.0,item1.0", (Text)chain.GetState(_fx.Address1));
 

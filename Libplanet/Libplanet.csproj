@@ -69,9 +69,7 @@ https://docs.libplanet.io/</Description>
     <PackageReference Include="Menees.Analyzers.2017" Version="2.0.3">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference
-      Include="Microsoft.DotNet.Analyzers.Compatibility"
-      Version="0.2.12-alpha">
+    <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>
         runtime; build; native; contentfiles; analyzers; buildtransitive
@@ -95,14 +93,14 @@ https://docs.libplanet.io/</Description>
     <PackageReference Include="System.Linq.Async" Version="4.0.*" />
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
     <PackageReference Include="Zio" Version="0.7.4" />
+    <PackageReference Include="Secp256k1.Net" Version="0.1.55" />
+    <PackageReference Include="Secp256k1.Native" Version="0.1.20" />
   </ItemGroup>
 
   <!-- The above hacky trick is borrowed from the following Stack Overflow
   answer: https://stackoverflow.com/a/45004898/383405 (see #2). -->
   <ItemGroup>
-    <ProjectReference
-      Include="..\Libplanet.Stun\Libplanet.Stun.csproj"
-      PrivateAssets="All" />
+    <ProjectReference Include="..\Libplanet.Stun\Libplanet.Stun.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <PropertyGroup>

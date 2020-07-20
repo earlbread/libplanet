@@ -12,7 +12,7 @@ namespace Libplanet.Crypto
         /// </summary>
         public static ICryptoBackend CryptoBackend
         {
-            get => _cryptoBackend ?? (_cryptoBackend = new DefaultCryptoBackend());
+            get => _cryptoBackend ??= new Secp256K1CryptoBackend();
             set => _cryptoBackend = value;
         }
     }

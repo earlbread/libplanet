@@ -1,6 +1,8 @@
 using System;
+using System.Security.Cryptography;
 using System.Text;
 using Libplanet.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Xunit;
 
 namespace Libplanet.Tests.Crypto
@@ -62,15 +64,14 @@ namespace Libplanet.Tests.Crypto
         [Fact]
         public void SignTest()
         {
-            var pk = new PrivateKey(
-                new byte[]
-                {
-                    0x52, 0x09, 0x38, 0xfa, 0xe0, 0x79, 0x78, 0x95, 0x61, 0x26,
-                    0x8c, 0x29, 0x33, 0xf6, 0x36, 0xd8, 0xb5, 0xa0, 0x01, 0x1e,
-                    0xa0, 0x41, 0x12, 0xdb, 0xab, 0xab, 0xf2, 0x95, 0xe5, 0xdd,
-                    0xef, 0x88,
-                }
-            );
+            var bytes = new byte[]
+            {
+                0x52, 0x09, 0x38, 0xfa, 0xe0, 0x79, 0x78, 0x95, 0x61, 0x26,
+                0x8c, 0x29, 0x33, 0xf6, 0x36, 0xd8, 0xb5, 0xa0, 0x01, 0x1e,
+                0xa0, 0x41, 0x12, 0xdb, 0xab, 0xab, 0xf2, 0x95, 0xe5, 0xdd,
+                0xef, 0x88,
+            };
+            var pk = new PrivateKey(bytes);
             var payload = new byte[]
             {
                 0x64, 0x37, 0x3a, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73,
@@ -107,6 +108,24 @@ namespace Libplanet.Tests.Crypto
             var actual = pk.Sign(payload);
 
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Fuck()
+        {
+            var defaultBackend = new DefaultCryptoBackend();
+            var secp256K1Backend = new Secp256K1CryptoBackend();
+
+            var bytes = ByteUtil.ParseHex(
+                "0dd5112eae25df2ff77779fa940e255f7a493022b841b7ca0296dca7ba3c9e");
+            var privateKey = new PrivateKey(bytes);
+            var h = new Sha256Digest();
+            var hashed = new byte[h.GetDigestSize()];
+
+            var s1 = defaultBackend.Sign(new HashDigest<SHA256>(hashed), privateKey);
+            var s2 = secp256K1Backend.Sign(new HashDigest<SHA256>(hashed), privateKey);
+
+            Assert.Equal(s1, s2);
         }
 
         [Fact]
