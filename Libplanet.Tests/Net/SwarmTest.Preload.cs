@@ -834,7 +834,7 @@ namespace Libplanet.Tests.Net
             }
         }
 
-        [Fact(Timeout = Timeout)]
+        [Fact(Timeout = 10 * 1000)]
         public async Task PreloadSparseStateWithTrustedPeers()
         {
             // Test that preload states from chain where middle state reference is empty.
@@ -1426,7 +1426,7 @@ namespace Libplanet.Tests.Net
             Assert.Equal(minerChain2.Tip, receiverChain.Tip);
         }
 
-        [Fact(Timeout = Timeout)]
+        [Fact(Timeout = 20 * 1000)]
         public async Task ReorgWhilePreloadAsync()
         {
             var seed = CreateSwarm();
