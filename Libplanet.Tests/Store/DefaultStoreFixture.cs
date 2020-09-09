@@ -7,7 +7,7 @@ namespace Libplanet.Tests.Store
 {
     public class DefaultStoreFixture : StoreFixture, IDisposable
     {
-        public DefaultStoreFixture(bool memory = false, bool mpt = false)
+        public DefaultStoreFixture(bool memory = true, bool mpt = false)
         {
             if (memory)
             {
