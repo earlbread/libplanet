@@ -35,7 +35,7 @@ namespace Libplanet.Tests.Net
 {
     public partial class SwarmTest : IDisposable
     {
-        private const int Timeout = 60 * 1000;
+        private const int Timeout = 30 * 1000;
         private const int DisposeTimeout = 5 * 1000;
 
         private readonly ITestOutputHelper _output;
@@ -125,7 +125,7 @@ namespace Libplanet.Tests.Net
             }
         }
 
-        [Fact(Timeout = Timeout)]
+        [Fact(Timeout = 60 * 1000)]
         public async Task BroadcastBlockToReconnectedPeer()
         {
             Swarm<DumbAction> seed = CreateSwarm();
@@ -1228,7 +1228,7 @@ namespace Libplanet.Tests.Net
             }
         }
 
-        [FactOnlyTurnAvailable(Timeout = 2 * Timeout)]
+        [FactOnlyTurnAvailable(Timeout = 80 * 1000)]
         public async Task ReconnectToTurn()
         {
             int port;
