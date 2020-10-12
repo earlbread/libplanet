@@ -308,7 +308,6 @@ namespace Libplanet.Blockchain.Renderers
         /// <inheritdoc cref="IActionRenderer{T}.RenderBlockEnd(Block{T}, Block{T})"/>
         public void RenderBlockEnd(Block<T> oldTip, Block<T> newTip)
         {
-            DiscoverBlock(newTip);
             Dictionary<HashDigest<SHA256>, List<ActionEvaluation>>? buffer =
                 _localRenderBuffer.Value;
             if (buffer is null)
@@ -360,6 +359,7 @@ namespace Libplanet.Blockchain.Renderers
             }
 
             _localRenderBuffer.Value = new Dictionary<HashDigest<SHA256>, List<ActionEvaluation>>();
+            DiscoverBlock(newTip);
         }
 
         public void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
@@ -587,7 +587,9 @@ namespace Libplanet.Blockchain.Renderers
                 return;
             }
 
-            _confirmed.TryAdd(block.Hash, 0);
+            uint accumulatedConfirmations = 0;
+
+            _confirmed.TryAdd(block.Hash, accumulatedConfirmations);
 
             var blocksToRender = new Stack<HashDigest<SHA256>>();
             blocksToRender.Push(block.Hash);
@@ -601,65 +603,38 @@ namespace Libplanet.Blockchain.Renderers
                     break;
                 }
 
-                uint c = _confirmed.AddOrUpdate(prevHash, k => 1U, (k, v) => v + 1U);
-                Logger.Verbose(
-                    "The block #{BlockIndex} {BlockHash} has {Confirmations} confirmations. " +
-                    "(The last confirmation was done by #{DiscoveredIndex} {DiscoveredHash}.)",
-                    prevBlock.Index,
-                    prevBlock.Hash,
-                    c,
-                    block.Index,
-                    block.Hash
-                );
+                uint c = _confirmed.AddOrUpdate(prevHash, k => 0U, (k, v) => v);
 
                 if (c >= Confirmations)
                 {
-                    if (!(Tip is Block<T> t))
-                    {
-                        Logger.Verbose(
-                            "Promoting #{NewTipIndex} {NewTipHash} as a new tip since there is " +
-                            "no tip yet...",
-                            prevBlock.Index,
-                            prevBlock.Hash
-                        );
-                        Tip = prevBlock;
-                    }
-                    else if (t.TotalDifficulty < prevBlock.TotalDifficulty)
-                    {
-                        Logger.Verbose(
-                            "Promoting #{NewTipIndex} {NewTipHash} as a new tip since its total " +
-                            "difficulty is more than the previous tip #{PreviousTipIndex} " +
-                            "{PreviousTipHash} ({NewDifficulty} > {PreviousDifficulty}).",
-                            prevBlock.Index,
-                            prevBlock.Hash,
-                            t.Index,
-                            t.Hash,
-                            prevBlock.TotalDifficulty,
-                            t.TotalDifficulty
-                        );
-                        Tip = prevBlock;
-                    }
-                    else
-                    {
-                        Logger.Verbose(
-                            "Although #{BlockIndex} {BlockHash} has been confirmed enough," +
-                            "its difficulty is less than the current tip #{TipIndex} {TipHash} " +
-                            "({Difficulty} < {TipDifficulty}).",
-                            prevBlock.Index,
-                            prevBlock.Hash,
-                            t.Index,
-                            t.Hash,
-                            prevBlock.TotalDifficulty,
-                            t.TotalDifficulty
-                        );
-                    }
-
                     break;
                 }
 
+                accumulatedConfirmations += 1;
+                blocksToRender.Push(prevHash);
                 prev = prevBlock.PreviousHash;
             }
             while (true);
+
+            while (blocksToRender.Count > 0)
+            {
+                var hash = blocksToRender.Pop();
+                var confirmations = accumulatedConfirmations;
+                uint c = _confirmed.AddOrUpdate(
+                    hash,
+                    k => confirmations,
+                    (k, v) => v + confirmations);
+
+                if (accumulatedConfirmations > 0)
+                {
+                    accumulatedConfirmations -= 1;
+                }
+
+                if (c >= Confirmations)
+                {
+                    Tip = Store.GetBlock<T>(hash);
+                }
+            }
         }
 
         private Block<T> FindBranchpoint(Block<T> a, Block<T> b)
