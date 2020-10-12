@@ -9,6 +9,7 @@ using System.Threading;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Store;
+using Serilog;
 
 namespace Libplanet.Blockchain.Renderers
 {
@@ -39,7 +40,7 @@ namespace Libplanet.Blockchain.Renderers
     ///    renderers: new[] { actionRenderer });
     /// ]]></code>
     /// </example>
-    public class DelayedActionRenderer<T> : DelayedRenderer<T>, IActionRenderer<T>
+    public class DelayedActionRenderer<T> : IActionRenderer<T>
         where T : IAction, new()
     {
         private readonly ConcurrentDictionary<HashDigest<SHA256>, List<ActionEvaluation>>
@@ -59,6 +60,9 @@ namespace Libplanet.Blockchain.Renderers
         private HashDigest<SHA256>? _eventReceivingBlock;
         private Reorg? _eventReceivingReorg;
 
+        private ConcurrentDictionary<HashDigest<SHA256>, uint> _confirmed;
+        private Block<T>? _tip;
+
         /// <summary>
         /// Creates a new <see cref="DelayedRenderer{T}"/> instance decorating the given
         /// <paramref name="renderer"/>.
@@ -69,8 +73,26 @@ namespace Libplanet.Blockchain.Renderers
         /// <param name="confirmations">The required number of confirmations to recognize a block.
         /// See also the <see cref="DelayedRenderer{T}.Confirmations"/> property.</param>
         public DelayedActionRenderer(IActionRenderer<T> renderer, IStore store, int confirmations)
-            : base(renderer, store, confirmations)
         {
+            if (confirmations == 0)
+            {
+                string msg =
+                    "Zero confirmations mean nothing is delayed so that it is equivalent to the " +
+                    $"bare {nameof(renderer)}; configure it to more than zero.";
+                throw new ArgumentOutOfRangeException(nameof(confirmations), msg);
+            }
+            else if (confirmations < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(confirmations),
+                    $"Expected more than zero {nameof(confirmations)}."
+                );
+            }
+
+            Logger = Log.ForContext(GetType());
+            Store = store;
+            Confirmations = confirmations;
+            _confirmed = new ConcurrentDictionary<HashDigest<SHA256>, uint>();
             ActionRenderer = renderer;
             _bufferedActionRenders =
                 new ConcurrentDictionary<HashDigest<SHA256>, List<ActionEvaluation>>();
@@ -79,15 +101,108 @@ namespace Libplanet.Blockchain.Renderers
         }
 
         /// <summary>
+        /// The same store to what <see cref="BlockChain{T}"/> uses.
+        /// </summary>
+        public IStore Store { get; }
+
+        /// <summary>
+        /// The required number of confirmations to recognize a block.
+        /// <para>For example, the required confirmations are 2, the block #N is recognized after
+        /// the block #N+1 and the block #N+2 are discovered.</para>
+        /// </summary>
+        public int Confirmations { get; }
+
+        /// <summary>
+        /// The <em>recognized</em> topmost block.  If not enough blocks are discovered yet,
+        /// this property can be <c>null</c>.
+        /// </summary>
+        public Block<T>? Tip
+        {
+            get => _tip;
+            private set
+            {
+                Block<T>? newTip = value;
+                if (newTip is null || newTip.Equals(_tip))
+                {
+                    return;
+                }
+
+                if (_tip is null)
+                {
+                    Logger.Verbose(
+                        $"{nameof(DelayedRenderer<T>)}.{nameof(Tip)} is tried to be updated to " +
+                        "#{NewTipIndex} {NewTipHash} (from null).",
+                        newTip.Index,
+                        newTip.Hash
+                    );
+                }
+                else
+                {
+                    Logger.Verbose(
+                        $"{nameof(DelayedRenderer<T>)}.{nameof(Tip)} is tried to be updated to " +
+                        "#{NewTipIndex} {NewTipHash} (from #{OldTipIndex} {OldTipHash}).",
+                        newTip.Index,
+                        newTip.Hash,
+                        _tip.Index,
+                        _tip.Hash
+                    );
+                }
+
+                Block<T>? oldTip = _tip;
+                _tip = newTip;
+                if (oldTip is null)
+                {
+                    Logger.Debug(
+                        $"{nameof(DelayedRenderer<T>)}.{nameof(Tip)} was updated to " +
+                        "#{NewTipIndex} {NewTipHash} (from null).",
+                        newTip.Index,
+                        newTip.Hash
+                    );
+                }
+                else
+                {
+                    Logger.Debug(
+                        $"{nameof(DelayedRenderer<T>)}.{nameof(Tip)} was updated to " +
+                        "#{NewTipIndex} {NewTipHash} (from #{OldTipIndex} {OldTipHash}).",
+                        newTip.Index,
+                        newTip.Hash,
+                        oldTip.Index,
+                        oldTip.Hash
+                    );
+                }
+
+                if (oldTip is Block<T> oldTip_ && !oldTip.Equals(newTip))
+                {
+                    Block<T>? branchpoint = null;
+                    if (!newTip.PreviousHash.Equals(oldTip_.Hash))
+                    {
+                        branchpoint = FindBranchpoint(oldTip, newTip);
+                        if (branchpoint.Equals(oldTip) || branchpoint.Equals(newTip))
+                        {
+                            branchpoint = null;
+                        }
+                    }
+
+                    OnTipChanged(oldTip, newTip, branchpoint);
+                }
+            }
+        }
+
+        /// <summary>
         /// The inner action renderer which has the <em>actual</em> implementations and receives
         /// delayed events.
         /// </summary>
         public IActionRenderer<T> ActionRenderer { get; }
 
+        /// <summary>
+        /// The logger to record internal state changes.
+        /// </summary>
+        protected ILogger Logger { get; }
+
         /// <inheritdoc cref="IRenderer{T}.RenderReorg(Block{T}, Block{T}, Block{T})"/>
-        public override void RenderReorg(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
+        public void RenderReorg(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
         {
-            base.RenderReorg(oldTip, newTip, branchpoint);
+            _confirmed.TryAdd(branchpoint.Hash, 0);
             _eventReceivingBlock = null;
             _eventReceivingReorg = new Reorg(
                 LocateBlockPath(branchpoint, oldTip),
@@ -101,9 +216,10 @@ namespace Libplanet.Blockchain.Renderers
         }
 
         /// <inheritdoc cref="DelayedRenderer{T}.RenderBlock(Block{T}, Block{T})"/>
-        public override void RenderBlock(Block<T> oldTip, Block<T> newTip)
+        public void RenderBlock(Block<T> oldTip, Block<T> newTip)
         {
-            base.RenderBlock(oldTip, newTip);
+            _confirmed.TryAdd(oldTip.Hash, 0);
+
             if (_eventReceivingReorg is Reorg reorg &&
                 reorg.OldTip.Equals(oldTip) &&
                 reorg.NewTip.Equals(newTip))
@@ -192,6 +308,7 @@ namespace Libplanet.Blockchain.Renderers
         /// <inheritdoc cref="IActionRenderer{T}.RenderBlockEnd(Block{T}, Block{T})"/>
         public void RenderBlockEnd(Block<T> oldTip, Block<T> newTip)
         {
+            DiscoverBlock(newTip);
             Dictionary<HashDigest<SHA256>, List<ActionEvaluation>>? buffer =
                 _localRenderBuffer.Value;
             if (buffer is null)
@@ -245,9 +362,8 @@ namespace Libplanet.Blockchain.Renderers
             _localRenderBuffer.Value = new Dictionary<HashDigest<SHA256>, List<ActionEvaluation>>();
         }
 
-        public override void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
+        public void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
         {
-            base.RenderReorgEnd(oldTip, newTip, branchpoint);
             _eventReceivingReorg = null;
         }
 
@@ -290,7 +406,7 @@ namespace Libplanet.Blockchain.Renderers
         }
 
         /// <inheritdoc cref="DelayedRenderer{T}.OnTipChanged(Block{T}, Block{T}, Block{T}?)"/>
-        protected override void OnTipChanged(
+        protected void OnTipChanged(
             Block<T> oldTip,
             Block<T> newTip,
             Block<T>? branchpoint
@@ -298,10 +414,10 @@ namespace Libplanet.Blockchain.Renderers
         {
             if (branchpoint is Block<T>)
             {
-                Renderer.RenderReorg(oldTip, newTip, branchpoint);
+                ActionRenderer.RenderReorg(oldTip, newTip, branchpoint);
             }
 
-            Renderer.RenderBlock(oldTip, newTip);
+            ActionRenderer.RenderBlock(oldTip, newTip);
 
             if (branchpoint is null)
             {
@@ -326,7 +442,7 @@ namespace Libplanet.Blockchain.Renderers
 
             if (branchpoint is Block<T>)
             {
-                Renderer.RenderReorgEnd(oldTip, newTip, branchpoint);
+                ActionRenderer.RenderReorgEnd(oldTip, newTip, branchpoint);
             }
         }
 
@@ -462,6 +578,132 @@ namespace Libplanet.Blockchain.Renderers
                     }
                 }
             }
+        }
+
+        private void DiscoverBlock(Block<T> block)
+        {
+            if (_confirmed.ContainsKey(block.Hash))
+            {
+                return;
+            }
+
+            _confirmed.TryAdd(block.Hash, 0);
+
+            var blocksToRender = new Stack<HashDigest<SHA256>>();
+            blocksToRender.Push(block.Hash);
+
+            HashDigest<SHA256>? prev = block.PreviousHash;
+            do
+            {
+                if (!(prev is HashDigest<SHA256> prevHash &&
+                      Store.GetBlock<T>(prevHash) is Block<T> prevBlock))
+                {
+                    break;
+                }
+
+                uint c = _confirmed.AddOrUpdate(prevHash, k => 1U, (k, v) => v + 1U);
+                Logger.Verbose(
+                    "The block #{BlockIndex} {BlockHash} has {Confirmations} confirmations. " +
+                    "(The last confirmation was done by #{DiscoveredIndex} {DiscoveredHash}.)",
+                    prevBlock.Index,
+                    prevBlock.Hash,
+                    c,
+                    block.Index,
+                    block.Hash
+                );
+
+                if (c >= Confirmations)
+                {
+                    if (!(Tip is Block<T> t))
+                    {
+                        Logger.Verbose(
+                            "Promoting #{NewTipIndex} {NewTipHash} as a new tip since there is " +
+                            "no tip yet...",
+                            prevBlock.Index,
+                            prevBlock.Hash
+                        );
+                        Tip = prevBlock;
+                    }
+                    else if (t.TotalDifficulty < prevBlock.TotalDifficulty)
+                    {
+                        Logger.Verbose(
+                            "Promoting #{NewTipIndex} {NewTipHash} as a new tip since its total " +
+                            "difficulty is more than the previous tip #{PreviousTipIndex} " +
+                            "{PreviousTipHash} ({NewDifficulty} > {PreviousDifficulty}).",
+                            prevBlock.Index,
+                            prevBlock.Hash,
+                            t.Index,
+                            t.Hash,
+                            prevBlock.TotalDifficulty,
+                            t.TotalDifficulty
+                        );
+                        Tip = prevBlock;
+                    }
+                    else
+                    {
+                        Logger.Verbose(
+                            "Although #{BlockIndex} {BlockHash} has been confirmed enough," +
+                            "its difficulty is less than the current tip #{TipIndex} {TipHash} " +
+                            "({Difficulty} < {TipDifficulty}).",
+                            prevBlock.Index,
+                            prevBlock.Hash,
+                            t.Index,
+                            t.Hash,
+                            prevBlock.TotalDifficulty,
+                            t.TotalDifficulty
+                        );
+                    }
+
+                    break;
+                }
+
+                prev = prevBlock.PreviousHash;
+            }
+            while (true);
+        }
+
+        private Block<T> FindBranchpoint(Block<T> a, Block<T> b)
+        {
+            while (a is Block<T> && a.Index > b.Index && a.PreviousHash is HashDigest<SHA256> aPrev)
+            {
+                a = Store.GetBlock<T>(aPrev);
+            }
+
+            while (b is Block<T> && b.Index > a.Index && b.PreviousHash is HashDigest<SHA256> bPrev)
+            {
+                b = Store.GetBlock<T>(bPrev);
+            }
+
+            if (a is null || b is null || a.Index != b.Index)
+            {
+                throw new ArgumentException(
+                    "Some previous blocks of two blocks are orphan.",
+                    nameof(a)
+                );
+            }
+
+            while (a.Index >= 0)
+            {
+                if (a.Equals(b))
+                {
+                    return a;
+                }
+
+                if (a.PreviousHash is HashDigest<SHA256> aPrev &&
+                    b.PreviousHash is HashDigest<SHA256> bPrev)
+                {
+                    a = Store.GetBlock<T>(aPrev);
+                    b = Store.GetBlock<T>(bPrev);
+                    continue;
+                }
+
+                break;
+            }
+
+            throw new ArgumentException(
+                "Two blocks do not have any ancestors in common.",
+                nameof(a)
+            );
         }
 
         private readonly struct Reorg
