@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 
 namespace Libplanet.Tests.Blockchain.Renderers
 {
+    [Collection("Non Parallel Collection")]
     public class DelayedActionRendererTest : DelayedRendererTest
     {
         private static readonly IAccountStateDelta _emptyStates =
