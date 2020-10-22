@@ -14,7 +14,7 @@ namespace Libplanet.Tests.Net.Protocols
 {
     public class ProtocolTest
     {
-        private const int Timeout = 60 * 1000;
+        private const int Timeout = 30 * 1000;
         private readonly Dictionary<Address, TestTransport> _transports;
 
         public ProtocolTest(ITestOutputHelper output)
@@ -323,7 +323,7 @@ namespace Libplanet.Tests.Net.Protocols
             await transportC.StopAsync(TimeSpan.Zero);
         }
 
-        [Theory(Timeout = 2 * Timeout)]
+        [Theory(Timeout = Timeout)]
         [InlineData(1)]
         [InlineData(5)]
         [InlineData(20)]
