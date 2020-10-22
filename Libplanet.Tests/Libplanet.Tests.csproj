@@ -67,7 +67,7 @@
     <ProjectReference Include="..\Libplanet.Stun\Libplanet.Stun.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(MSBuildRuntimeType)'=='Mono' ">
+  <ItemGroup>
     <!--
     As Mono has no proper AppDomain, we prevent it on Mono.
     This works around Xunit's fatal error on Mono.
