@@ -701,6 +701,7 @@ namespace Libplanet.Blockchain
             CancellationToken cancellationToken = default(CancellationToken)
         )
         {
+            Log.Debug("MineBlock Start.");
             if (txBatchSize < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(txBatchSize));

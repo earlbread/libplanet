@@ -143,6 +143,7 @@ namespace Libplanet.Tests.Net
 
             foreach (int i in Enumerable.Range(0, 10))
             {
+                Log.Debug("Mining Start");
                 await chainWithBlocks.MineBlock(seed.Address);
             }
 
