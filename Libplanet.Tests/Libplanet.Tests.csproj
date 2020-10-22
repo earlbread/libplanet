@@ -77,4 +77,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup Condition=" '$(MSBuildRuntimeType)'!='Mono' ">
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
