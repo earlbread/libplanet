@@ -128,12 +128,18 @@ namespace Libplanet.Tests.Net
         [Fact(Timeout = 60 * 1000)]
         public async Task BroadcastBlockToReconnectedPeer()
         {
+            Log.Debug("Creating Seed...");
             Swarm<DumbAction> seed = CreateSwarm();
+            Log.Debug("Created Seed...");
             BlockChain<DumbAction> chainWithBlocks = seed.BlockChain;
 
             var privateKey = new PrivateKey();
+            Log.Debug("Creating swarmA...");
             Swarm<DumbAction> swarmA = CreateSwarm(privateKey: privateKey);
+            Log.Debug("Created swarmA...");
+            Log.Debug("Creating swarmB...");
             Swarm<DumbAction> swarmB = CreateSwarm(privateKey: privateKey);
+            Log.Debug("Created swarmB...");
 
             foreach (int i in Enumerable.Range(0, 10))
             {
@@ -142,9 +148,15 @@ namespace Libplanet.Tests.Net
 
             try
             {
+                Log.Debug("Starting seed...");
                 await StartAsync(seed);
+                Log.Debug("Started seed...");
+                Log.Debug("Starting swarmA...");
                 await StartAsync(swarmA);
+                Log.Debug("Started swarmA...");
+                Log.Debug("Starting swarmB...");
                 await StartAsync(swarmB);
+                Log.Debug("Started swarmB...");
 
                 Assert.Equal(swarmA.AsPeer, swarmB.AsPeer);
 
