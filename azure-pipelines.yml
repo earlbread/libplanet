@@ -22,7 +22,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -39,7 +39,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -56,7 +56,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -73,7 +73,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -90,7 +90,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -107,7 +107,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -124,7 +124,7 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
 
@@ -141,6 +141,6 @@ jobs:
       configuration: $(configuration)
       turnServerUrl: $(turnServerUrl)
       testPrefix: '"$PROGRAMFILES/Mono/bin/mono.exe"'
-      testArguments: -appdomains denied -stoponfail
+      testArguments: -appdomains denied -stoponfail -verbose
       copySQLitePCLRaw: true
   timeoutInMinutes: 30
