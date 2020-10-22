@@ -10,7 +10,7 @@ namespace Libplanet.Tests.Net
 {
     public class IceServerTest
     {
-        private const int Timeout = 60 * 1000;
+        private const int Timeout = 30 * 1000;
 
         public IceServerTest(ITestOutputHelper output)
         {
