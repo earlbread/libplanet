@@ -12,6 +12,7 @@ using Xunit.Abstractions;
 
 namespace Libplanet.Tests.Net.Protocols
 {
+    [Collection("Non Parallel Collection")]
     public class ProtocolTest
     {
         private const int Timeout = 60 * 1000;

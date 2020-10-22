@@ -1,8 +1,5 @@
 using System;
 using System.IO;
-using Libplanet.Blockchain;
-using Libplanet.Tests.Blockchain;
-using Libplanet.Tests.Common.Action;
 using Libplanet.Tests.Store;
 using Xunit;
 
@@ -38,12 +35,6 @@ namespace Libplanet.RocksDBStore.Tests
             try
             {
                 var store = new RocksDBStore(path);
-                var blocks = new BlockChain<DumbAction>(
-                    new NullPolicy<DumbAction>(),
-                    store,
-                    store,
-                    Fx.GenesisBlock
-                );
                 store.Dispose();
 
                 store = new RocksDBStore(path);

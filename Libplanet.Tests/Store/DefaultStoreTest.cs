@@ -9,6 +9,7 @@ using Xunit.Abstractions;
 
 namespace Libplanet.Tests.Store
 {
+    [Collection("Non Parallel Collection")]
     public class DefaultStoreTest : StoreTest, IDisposable
     {
         private readonly DefaultStoreFixture _fx;
