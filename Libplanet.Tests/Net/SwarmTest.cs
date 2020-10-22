@@ -33,6 +33,7 @@ using Xunit.Abstractions;
 
 namespace Libplanet.Tests.Net
 {
+    [Collection("BlockChain Collection")]
     public partial class SwarmTest : IDisposable
     {
         private const int Timeout = 30 * 1000;
