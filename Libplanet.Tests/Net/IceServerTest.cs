@@ -8,6 +8,7 @@ using Xunit.Abstractions;
 
 namespace Libplanet.Tests.Net
 {
+    [Collection("Non Parallel Collection")]
     public class IceServerTest
     {
         private const int Timeout = 30 * 1000;
