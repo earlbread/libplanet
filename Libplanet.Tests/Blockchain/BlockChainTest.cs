@@ -27,6 +27,7 @@ using static Libplanet.Tests.Common.Action.ThrowException;
 
 namespace Libplanet.Tests.Blockchain
 {
+    [Collection("Test Collection #1")]
     public partial class BlockChainTest : IDisposable
     {
         private StoreFixture _fx;
