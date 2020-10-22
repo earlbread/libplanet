@@ -19,6 +19,7 @@ using AsyncEnumerable = System.Linq.AsyncEnumerable;
 
 namespace Libplanet.Tests.Net
 {
+    [Collection("Non Parallel Collection")]
     public class BlockCompletionTest
     {
         private const int Timeout = 20000;
