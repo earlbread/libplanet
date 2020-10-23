@@ -830,7 +830,7 @@ namespace Libplanet.Tests.Net
             }
         }
 
-        [Fact(Timeout = Timeout)]
+        [Fact(Timeout = Timeout * 2)]
         public async Task PreloadSparseStateWithTrustedPeers()
         {
             // Test that preload states from chain where middle state reference is empty.
