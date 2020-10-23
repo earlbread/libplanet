@@ -2,7 +2,7 @@ parameters:
   configuration: Debug
   testArguments: ""
   locale: "en_US.UTF8"
-  testTimeoutInMinutes: 12
+  testTimeoutInMinutes: 20
   useDotnetTest: false
 
 steps:
