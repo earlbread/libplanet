@@ -411,7 +411,8 @@ namespace Libplanet.Tests.Net
                     {
                         try
                         {
-                            var block = await chain.MineBlock(swarm.Address);
+                            var block = await chain.MineBlock(
+                                swarm.Address, cancellationToken: cancellationToken);
 
                             Log.Debug(
                                 "Block mined. [Node: {0}, Block: {1}]",
