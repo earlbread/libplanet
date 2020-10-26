@@ -409,9 +409,13 @@ namespace Libplanet.Tests.Net
                 {
                     while (!cancellationToken.IsCancellationRequested)
                     {
+                        await Task.Delay(delay);
+
                         try
                         {
-                            var block = await chain.MineBlock(swarm.Address);
+                            var block = await chain.MineBlock(
+                                swarm.Address,
+                                cancellationToken: cancellationToken);
 
                             Log.Debug(
                                 "Block mined. [Node: {0}, Block: {1}]",
@@ -421,11 +425,6 @@ namespace Libplanet.Tests.Net
                         }
                         catch (OperationCanceledException)
                         {
-                            continue;
-                        }
-                        finally
-                        {
-                            await Task.Delay(delay);
                         }
                     }
 
