@@ -63,7 +63,7 @@ namespace Libplanet.Tests
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            int[] difficulties = Enumerable.Range(1, 10)
+            int[] difficulties = Enumerable.Range(1, 8)
                 .Select(x => (int)Math.Pow(2, x * 2)).ToArray();
 
             foreach (var difficulty in difficulties)
